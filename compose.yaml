@@ -1,0 +1,38 @@
+services:
+  nginx:
+    image: nginx:1.30.5-alpine-slim
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html:ro
+
+  postgres:
+    image: postgres:18-bookworm
+    environment:
+      POSTGRES_DB: mol_cms
+      POSTGRES_USER: mol_cms
+      POSTGRES_PASSWORD: mol_cms_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U mol_cms -d mol_cms
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  postgres_data:
