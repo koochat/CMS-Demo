@@ -14,21 +14,27 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     working_dir: /var/www/html
+    environment:
+      DB_HOST: "${DB_HOST:-postgres}"
+      DB_PORT: "${DB_PORT:-5432}"
+      DB_NAME: "${DB_NAME:-mol_cms}"
+      DB_USER: "${DB_USER:-mol_cms}"
+      DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
     volumes:
       - ./:/var/www/html:ro
 
   postgres:
     image: postgres:18-bookworm
     environment:
-      POSTGRES_DB: mol_cms
-      POSTGRES_USER: mol_cms
-      POSTGRES_PASSWORD: mol_cms_dev
+      POSTGRES_DB: "${DB_NAME:-mol_cms}"
+      POSTGRES_USER: "${DB_USER:-mol_cms}"
+      POSTGRES_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
       test:
         - CMD-SHELL
-        - pg_isready -U mol_cms -d mol_cms
+        - 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"'
       interval: 5s
       timeout: 5s
       retries: 10
